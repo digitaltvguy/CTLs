@@ -53,12 +53,12 @@ void main
   XYZ[2] = PQ10000_f(XYZPQ[2])*OUT_WP_MAX;
   
 
-  float outputCV[3] = clamp_f3( XYZ, 0., 65535.);
+  //float outputCV[3] = clamp_f3( XYZ, 0., 65535.);
 
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = outputCV[0];
-  gOut = outputCV[1];
-  bOut = outputCV[2];
+  rOut = XYZ[0];
+  gOut = XYZ[1];
+  bOut = XYZ[2];
   //aOut = aIn;
 }

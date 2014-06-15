@@ -57,12 +57,12 @@ void main
     // convert from  2020 RGB to XYZ
   float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
 
-  float outputCV[3] = clamp_f3( XYZ, 0., 65535.0);
+  //float outputCV[3] = clamp_f3( XYZ, 0., 65535.0);
 
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = outputCV[0];
-  gOut = outputCV[1];
-  bOut = outputCV[2];
+  rOut = XYZ[0];
+  gOut = XYZ[1];
+  bOut = XYZ[2];
   //aOut = aIn;
 }
