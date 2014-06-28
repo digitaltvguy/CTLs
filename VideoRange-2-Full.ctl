@@ -4,8 +4,7 @@
 import "utilities";
 
 
-// assume that input file is tiff MSB justified in 2020 PQ
-// remove PQ gamma output will be full range 2020 linear 16 bit
+//assumes input file is in PQ ranged 0-1
 
 const unsigned int BITDEPTH = 16;
 // video range is
@@ -36,7 +35,7 @@ void main
  RGBFULL[1] = (gIn - F_BLACK)/RANGE;
  RGBFULL[2] = (bIn - F_BLACK)/RANGE;
  
-  RGBFULL = clamp_f3( RGBFULL, 0., 1.0);
+  RGBFULL = clamp_f3( RGBFULL, F_BLACK, F_WHITE);
  
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/

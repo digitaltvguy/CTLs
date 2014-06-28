@@ -50,10 +50,7 @@ const float DISPGAMMA = 2.4;
 const float L_W = 1.0;
 const float L_B = 0.0;
 
-// scale factor to put image through top of tone scale
-const float OUT_WP_MAX = 100.0;
-const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
-const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);
+
 
 void main 
 (
@@ -62,35 +59,47 @@ void main
   input varying float bIn, 
   output varying float rOut,
   output varying float gOut,
-  output varying float bOut
+  output varying float bOut,
+  input uniform float MAX = 100.0
+
 )
 {
+// scale factor to put image through top of tone scale
+const float OUT_WP_MAX = 250.0;
+const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
+const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);	
+	
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
-    
+
   /* -- scale to put image through top of tone scale */
 	  oces[0] = oces[0]/SCALE_MAX;
 	  oces[1] = oces[1]/SCALE_MAX;
 	  oces[2] = oces[2]/SCALE_MAX; 
+	  
+	      
 
   /* --- Apply hue-preserving tone scale with saturation preservation --- */
     float rgbPost[3] = odt_tonescale_fwd_f3( oces);
-
+    
   /* scale image back to proper range */
    rgbPost[0] = SCALE_MAX * rgbPost[0];
    rgbPost[1] = SCALE_MAX * rgbPost[1];
-   rgbPost[2] = SCALE_MAX * rgbPost[2];  
+   rgbPost[2] = SCALE_MAX * rgbPost[2];      
+    
+    
 
   /* --- Apply black point compensation --- */  
     float linearCV[3] = bpc_video_fwd( rgbPost); // bpc_cinema_fwd( rgbPost);
- 
+    
   /* Align peak white point */
   // Luminance to code value conversion. Scales the luminance white point, 
   // OUT_WP, to be CV 1.0 and OUT_BP to CV 0.0.
   linearCV[0] = PEAK_ADJ * linearCV[0];
   linearCV[1] = PEAK_ADJ * linearCV[1];
-  linearCV[2] = PEAK_ADJ * linearCV[2];  
-  
+  linearCV[2] = PEAK_ADJ * linearCV[2];        
+    
+
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
@@ -114,9 +123,13 @@ void main
     outputCV[0] = bt1886_r( linearCV[0], DISPGAMMA, L_W, L_B);
     outputCV[1] = bt1886_r( linearCV[1], DISPGAMMA, L_W, L_B);
     outputCV[2] = bt1886_r( linearCV[2], DISPGAMMA, L_W, L_B);
+
+  /* --- Full range to SMPTE range --- */
+    outputCV = fullRange_to_smpteRange( outputCV);
   
   /* --- Cast outputCV to rOut, gOut, bOut --- */
     rOut = outputCV[0];
     gOut = outputCV[1];
     bOut = outputCV[2];
+
 }

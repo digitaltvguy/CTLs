@@ -50,9 +50,12 @@ void main
 	
 
  float R2020[3];
-  R2020[0] = PQ10000_f(PQ2020[0])*OUT_WP_MAX;
-  R2020[1] = PQ10000_f(PQ2020[1])*OUT_WP_MAX;
-  R2020[2] = PQ10000_f(PQ2020[2])*OUT_WP_MAX;
+ // scale by PQ10000_r(0.1) so that PQ2020[i] is at proper scale 
+ // R2020 will come out from 0-0.1 or 1k nits
+ // could later then be put into OCES and run through traditional tone curve for 709
+  R2020[0] = PQ10000_f(PQ10000_r(0.1)*PQ2020[0])*OUT_WP_MAX;
+  R2020[1] = PQ10000_f(PQ10000_r(0.1)*PQ2020[1])*OUT_WP_MAX;
+  R2020[2] = PQ10000_f(PQ10000_r(0.1)*PQ2020[2])*OUT_WP_MAX;
   
   R2020 = clamp_f3( R2020, 0., OUT_WP_MAX);
   // data is full range now

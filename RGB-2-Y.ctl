@@ -1,7 +1,12 @@
+//  P3 to ACES primaries
+// slight color balancing to make Oblivion look better
 
 
 import "utilities";
 import "utilities-color";
+
+
+
 
 
 void main 
@@ -15,15 +20,11 @@ void main
 )
 {
 
-  float RGB[3] = {rIn, gIn, bIn};
 
- 
-  float outputCV[3] = clamp_f3(RGB,0.,HALF_POS_INF); 
- 
-
-  /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = outputCV[0];
-  gOut = outputCV[1];
-  bOut = outputCV[2];
+  rOut = rIn/3.0 + gIn/3.0 + bIn/3.0;
+  gOut = rIn/3.0 + gIn/3.0 + bIn/3.0;
+  bOut = rIn/3.0 + gIn/3.0 + bIn/3.0;
   //aOut = aIn;
 }
+
+
