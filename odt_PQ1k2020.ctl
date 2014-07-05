@@ -68,7 +68,7 @@ void main
   //if(tmp2[1]>1.0)print("SCALE: ",SCALE, " tmp2[1]= ",tmp2[1],"\n");
   //if(tmp2[2]>9.7)print("tmp2[2]= ",tmp2[2],"\n");
 
-  // clamp to 10% or 1k nits and scale output to go from 0-1k nits
+  // clamp to 10% or 1k nits and scale output to go from 0-1k nits across whole code value range
   float cctf[3] = clamp_f3(tmp,0.,0.1); 
   cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0])/PQ10000_r(0.1);
   cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1])/PQ10000_r(0.1);

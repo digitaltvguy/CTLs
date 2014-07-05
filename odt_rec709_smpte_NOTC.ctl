@@ -65,7 +65,7 @@ void main
 )
 {
 // scale factor to put image through top of tone scale
-const float OUT_WP_MAX = 250.0;
+const float OUT_WP_MAX = MAX;
 const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
 const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);	
 	

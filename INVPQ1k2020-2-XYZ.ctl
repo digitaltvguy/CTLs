@@ -21,6 +21,7 @@ const float RANGE = F_WHITE - F_BLACK;
 // ODT parameters related to black point compensation (BPC) and encoding
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX = 10000.0; //speculars
+const float OUT_WP_1k = 1000.0;
 
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
@@ -57,7 +58,7 @@ void main
   R2020[1] = PQ10000_f(PQ10000_r(0.1)*PQ2020[1])*OUT_WP_MAX;
   R2020[2] = PQ10000_f(PQ10000_r(0.1)*PQ2020[2])*OUT_WP_MAX;
   
-  R2020 = clamp_f3( R2020, 0., OUT_WP_MAX);
+  R2020 = clamp_f3( R2020, 0., OUT_WP_1k);
   // data is full range now
   
     // convert from  2020 RGB to XYZ
