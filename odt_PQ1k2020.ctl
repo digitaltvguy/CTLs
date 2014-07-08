@@ -62,14 +62,14 @@ void main
   tmp[0] = max( (offset_scaled[0] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
   tmp[1] = max( (offset_scaled[1] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
   tmp[2] = max( (offset_scaled[2] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
- 
-  float tmp2[3] = clamp_f3(tmp,0.,65000.0); 
+
+  // clamp to 10% or 1k nits and scale output to go from 0-1k nits across whole code value range 
+  float tmp2[3] = clamp_f3(tmp,0.,0.1); 
   //if(tmp2[0]>9.7)print("tmp2[0]= ",tmp2[0],"\n");
   //if(tmp2[1]>1.0)print("SCALE: ",SCALE, " tmp2[1]= ",tmp2[1],"\n");
   //if(tmp2[2]>9.7)print("tmp2[2]= ",tmp2[2],"\n");
 
-  // clamp to 10% or 1k nits and scale output to go from 0-1k nits across whole code value range
-  float cctf[3] = clamp_f3(tmp,0.,0.1); 
+  float cctf[3]; 
   cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0])/PQ10000_r(0.1);
   cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1])/PQ10000_r(0.1);
   cctf[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[2])/PQ10000_r(0.1); 
