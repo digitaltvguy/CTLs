@@ -1,4 +1,6 @@
 // Assume full range input. Inverse PQ as 0-1
+// NOTE: DOES NOT INVERT TONE MAPPING
+// ONLY REMOVES GAMMA and multiplies from 2020 to XYZ
 //
 //
 
