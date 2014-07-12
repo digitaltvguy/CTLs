@@ -60,22 +60,24 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 100.0
-
+  input uniform float MAX = 1000.0  
 )
 {
+
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
-const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);	
-	
+const float SCALE_MAX = OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
+const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);
+
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
-
+    
+    
   /* -- scale to put image through top of tone scale */
-	  oces[0] = oces[0]/SCALE_MAX;
-	  oces[1] = oces[1]/SCALE_MAX;
-	  oces[2] = oces[2]/SCALE_MAX; 
+  float ocesScale[3];
+	  ocesScale[0] = oces[0]/SCALE_MAX;
+	  ocesScale[1] = oces[1]/SCALE_MAX;
+	  ocesScale[2] = oces[2]/SCALE_MAX; 
 	  
 	      
 
@@ -87,7 +89,11 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
    rgbPost[1] = SCALE_MAX * rgbPost[1];
    rgbPost[2] = SCALE_MAX * rgbPost[2];      
     
-    
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
+   if(ocesScale[0] < 0.0001) rgbPost[0] = oces[0];
+   if(ocesScale[1] < 0.0001) rgbPost[1] = oces[1];
+   if(ocesScale[2] < 0.0001) rgbPost[2] = oces[2];    
 
   /* --- Apply black point compensation --- */  
     float linearCV[3] = bpc_video_fwd( rgbPost); // bpc_cinema_fwd( rgbPost);
@@ -97,7 +103,8 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
   // OUT_WP, to be CV 1.0 and OUT_BP to CV 0.0.
   linearCV[0] = PEAK_ADJ * linearCV[0];
   linearCV[1] = PEAK_ADJ * linearCV[1];
-  linearCV[2] = PEAK_ADJ * linearCV[2];        
+  linearCV[2] = PEAK_ADJ * linearCV[2];  
+          
     
 
   /* --- Convert to display primary encoding --- */

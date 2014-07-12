@@ -27,8 +27,7 @@ const unsigned int BITDEPTH = 16;
 const unsigned int CV_BLACK = 4096; //64.0*64.0;
 const unsigned int CV_WHITE = 60160;
 
-const float BPC = 0.; // these are not used for HDR tonecurve
-const float SCALE = 1.;
+
 
 void main 
 (
@@ -44,7 +43,8 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
+const float SCALE_MAX = OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
+
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
                                       // (to be mapped to device black point)
@@ -59,22 +59,28 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
                                       	
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
-
+    
   /* -- scale to put image through top of tone scale */
-	  oces[0] = oces[0]/SCALE_MAX;
-	  oces[1] = oces[1]/SCALE_MAX;
-	  oces[2] = oces[2]/SCALE_MAX; 
+  float ocesScale[3];
+	  ocesScale[0] = oces[0]/SCALE_MAX;
+	  ocesScale[1] = oces[1]/SCALE_MAX;
+	  ocesScale[2] = oces[2]/SCALE_MAX; 
 	  
 	      
 
   /* --- Apply hue-preserving tone scale with saturation preservation --- */
-    float rgbPost[3] = odt_tonescale_fwd_f3( oces);
+    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
     
   /* scale image back to proper range */
    rgbPost[0] = SCALE_MAX * rgbPost[0];
    rgbPost[1] = SCALE_MAX * rgbPost[1];
    rgbPost[2] = SCALE_MAX * rgbPost[2];      
     
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
+   if(ocesScale[0] < 0.0001) rgbPost[0] = oces[0];
+   if(ocesScale[1] < 0.0001) rgbPost[1] = oces[1];
+   if(ocesScale[2] < 0.0001) rgbPost[2] = oces[2];
     
 
   /* --- Apply black point compensation --- */  

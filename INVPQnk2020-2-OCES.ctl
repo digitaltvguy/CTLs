@@ -1,5 +1,5 @@
 // Assume full range input. Inverse PQ as 0-1
-// NOTE: DOES NOT INVERT TONE MAPPING
+// NOTE: Now includes inverse TONE MAPPING
 // ONLY REMOVES GAMMA and multiplies from 2020 to XYZ
 //
 //
@@ -39,8 +39,6 @@ const float OUT_WP_MAX_PQ = 10000.0; //speculars
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
 
-const float BPC = 0.; // these are not used for HDR tonecurve
-const float SCALE = 1.;
 
 void main 
 (
@@ -56,7 +54,7 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
+const float SCALE_MAX = OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
                                       // (to be mapped to device black point)
@@ -106,17 +104,24 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_HDR); 
   
   /* scale RGB prior to inverse tone map */
-  rgbPre[0] = rgbPre[0]/SCALE_MAX;
-  rgbPre[1] = rgbPre[1]/SCALE_MAX;
-  rgbPre[2] = rgbPre[2]/SCALE_MAX;
+  float rgbPost[3];
+  rgbPost[0] = rgbPre[0]/SCALE_MAX;
+  rgbPost[1] = rgbPre[1]/SCALE_MAX;
+  rgbPost[2] = rgbPre[2]/SCALE_MAX;
   
   /* --- Apply inverse hue-preserving tone scale w/ sat preservation --- */
-    float oces[3] = odt_tonescale_inv_f3( rgbPre);
+    float oces[3] = odt_tonescale_inv_f3( rgbPost);
     
   /* restore scale back after inverse tone map */
   oces[0] = SCALE_MAX * oces[0];
   oces[1] = SCALE_MAX * oces[1];
   oces[2] = SCALE_MAX * oces[2];
+  
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX any value below 0.0001 will be clipped
+   if(rgbPost[0] < 0.0001) oces[0] = rgbPre[0];
+   if(rgbPost[1] < 0.0001) oces[1] = rgbPre[1];
+   if(rgbPost[2] < 0.0001) oces[2] = rgbPre[2];  
   
   /* --- Cast OCES to rOut, gOut, bOut --- */  
     rOut = oces[0];
