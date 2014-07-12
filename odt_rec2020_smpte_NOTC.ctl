@@ -1,20 +1,21 @@
 // 
-// Output Device Transform to Rec709
+// Output Device Transform to Rec2020
 // v0.7.1
 //
 
 //
 // Summary :
-//  This transform is intended for mapping OCES onto a Rec.709 broadcast monitor
-//  that is calibrated to a D65 white point at 100 cd/m^2. The assumed observer 
-//  adapted white is D65, and the viewing environment is that of a dark theater. 
+//  This transform is intended for mapping OCES onto a Rec.2020 broadcast 
+//  monitor that is calibrated to a D65 white point at 100 cd/m^2. The assumed 
+//  observer adapted white is D65, and the viewing environment is that of a dark
+//  theater. 
 //
 // Device Primaries : 
-//  Primaries are those specified in Rec. ITU-R BT.709
+//  Primaries are those specified in Rec. ITU-R BT.2020
 //  CIE 1931 chromaticities:  x         y         Y
-//              Red:          0.64      0.33
-//              Green:        0.3       0.6
-//              Blue:         0.15      0.06
+//              Red:          0.708     0.292
+//              Green:        0.17      0.797
+//              Blue:         0.131     0.046
 //              White:        0.3217    0.329     100 cd/m^2
 //
 // Display EOTF :
@@ -42,7 +43,7 @@ import "odt-transforms-common";
 
 
 /* --- ODT Parameters --- */
-const Chromaticities DISPLAY_PRI = REC709_PRI;
+const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);
 const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 
@@ -60,7 +61,7 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX 
+  input uniform float MAX = 1000.0  
 )
 {
 
@@ -104,26 +105,26 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
   linearCV[0] = PEAK_ADJ * linearCV[0];
   linearCV[1] = PEAK_ADJ * linearCV[1];
   linearCV[2] = PEAK_ADJ * linearCV[2];  
-          
+  
+      
     
 
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
 
-  /* --- Handle out-of-gamut values --- */
-    // Clip to P3 gamut using hue-preserving clip
-    XYZ = huePreservingClip_to_p3d60( XYZ);
-
       // Apply CAT from ACES white point to assumed observer adapted white point
       XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);
 
-    // CIE XYZ to display RGB
+    // CIE XYZ to display primaries
     linearCV = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT);
 
+  /* --- Handle out-of-gamut values --- */
     // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
-    // Note: there is no hue restore step here.
-    linearCV = clamp_f3( linearCV, 0., 1.);
+    float linearCVClamp[3] = clamp_f3( linearCV, 0., 1.);
+  
+    // Restore hue after clip operation ("smart-clip")
+    linearCV = restore_hue_dw3( linearCV, linearCVClamp);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
