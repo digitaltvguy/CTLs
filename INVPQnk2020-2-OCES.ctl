@@ -57,7 +57,18 @@ void main
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
 const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
-const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP);	
+// internal variables used by bpc function
+const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
+                                      // (to be mapped to device black point)
+const float OCES_WP_HDR = MAX;     // luminance of OCES white point 
+                                      // (to be mapped to device white point)
+const float OUT_BP_HDR = OUT_BP;      // luminance of output device black point 
+                                      // (to which OCES black point is mapped)
+const float OUT_WP_HDR = OUT_WP_MAX_PQ; // luminance of output device white point
+                                      // (to which OCES black point is mapped)
+const float BPC_HDR = (OCES_BP_HDR * OUT_WP_HDR - OCES_WP_HDR * OUT_BP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
+const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR); 
+
 	
 // extract out 0-1 range from input that would be MSB justified 0-1
  float PQ2020[3];
@@ -92,7 +103,7 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP);
    float linearCV[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
-    float rgbPre[3] = bpc_video_inv( linearCV);
+    float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_HDR); 
   
   /* scale RGB prior to inverse tone map */
   rgbPre[0] = rgbPre[0]/SCALE_MAX;

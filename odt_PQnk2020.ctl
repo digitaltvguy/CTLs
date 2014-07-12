@@ -45,8 +45,18 @@ void main
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
 const float SCALE_MAX = OUT_WP_MAX/(100.0 - 0.04*(OUT_WP_MAX-100.0));
-const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP);	
-	
+// internal variables used by bpc function
+const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
+                                      // (to be mapped to device black point)
+const float OCES_WP_HDR = MAX;     // luminance of OCES white point 
+                                      // (to be mapped to device white point)
+const float OUT_BP_HDR = OUT_BP;      // luminance of output device black point 
+                                      // (to which OCES black point is mapped)
+const float OUT_WP_HDR = OUT_WP_MAX_PQ; // luminance of output device white point
+                                      // (to which OCES black point is mapped)
+const float BPC_HDR = (OCES_BP_HDR * OUT_WP_HDR - OCES_WP_HDR * OUT_BP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
+const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);                                      
+                                      	
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
 
@@ -68,16 +78,8 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP);
     
 
   /* --- Apply black point compensation --- */  
-    float linearCV[3] = bpc_video_fwd( rgbPost); // bpc_cinema_fwd( rgbPost);
+   float linearCV[3] = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_HDR); // bpc_cinema_fwd( rgbPost);
     
-  /* Align peak white point */
-  // Luminance to code value conversion. Scales the luminance white point, 
-  // OUT_WP, to be CV 1.0 and OUT_BP to CV 0.0.
-  linearCV[0] = PEAK_ADJ * linearCV[0];
-  linearCV[1] = PEAK_ADJ * linearCV[1];
-  linearCV[2] = PEAK_ADJ * linearCV[2];        
-    
-
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
