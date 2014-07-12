@@ -82,7 +82,7 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
 	      
 
   /* --- Apply hue-preserving tone scale with saturation preservation --- */
-    float rgbPost[3] = odt_tonescale_fwd_f3( oces);
+    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
     
   /* scale image back to proper range */
    rgbPost[0] = SCALE_MAX * rgbPost[0];
