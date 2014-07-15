@@ -43,6 +43,7 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
+const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
 const float SCALE_MAX = OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
 
 // internal variables used by bpc function
@@ -101,19 +102,19 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   float tmp[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
 
-  // clamp to 10% or 1k nits and scale output to go from 0-1k nits across whole code value range 
-  tmp[0] = tmp[0]*0.1;
-  tmp[1] = tmp[1]*0.1;
-  tmp[2] = tmp[2]*0.1;
-  float tmp2[3] = clamp_f3(tmp,0.,0.1); 
+  // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
+  tmp[0] = tmp[0]*RATIO;
+  tmp[1] = tmp[1]*RATIO;
+  tmp[2] = tmp[2]*RATIO;
+  float tmp2[3] = clamp_f3(tmp,0.,RATIO); 
   //if(tmp2[0]>9.7)print("tmp2[0]= ",tmp2[0],"\n");
   //if(tmp2[1]>1.0)print("SCALE: ",SCALE, " tmp2[1]= ",tmp2[1],"\n");
   //if(tmp2[2]>9.7)print("tmp2[2]= ",tmp2[2],"\n");
 
   float cctf[3]; 
-  cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0])/PQ10000_r(0.1);
-  cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1])/PQ10000_r(0.1);
-  cctf[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[2])/PQ10000_r(0.1); 
+  cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0])/PQ10000_r(RATIO);
+  cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1])/PQ10000_r(RATIO);
+  cctf[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[2])/PQ10000_r(RATIO); 
   
 
   float outputCV[3] = clamp_f3( cctf, 0., pow( 2, BITDEPTH)-1);

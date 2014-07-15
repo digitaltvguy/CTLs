@@ -54,6 +54,7 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
+const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
 const float SCALE_MAX = OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
@@ -79,12 +80,12 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 	
 
  float R2020[3];
- // scale by PQ10000_r(0.1) so that PQ2020[i] is at proper scale 
- // R2020 will come out from 0-0.1 or 1k nits
+ // scale by PQ10000_r(0.1) or "RATIO" so that PQ2020[i] is at proper scale 
+ // R2020 will come out from 0-0.1 or 1k nits (0 - RATIO)
  // could later then be put into OCES and run through traditional tone curve for 709
-  R2020[0] = PQ10000_f(PQ10000_r(0.1)*PQ2020[0])*OUT_WP_MAX;
-  R2020[1] = PQ10000_f(PQ10000_r(0.1)*PQ2020[1])*OUT_WP_MAX;
-  R2020[2] = PQ10000_f(PQ10000_r(0.1)*PQ2020[2])*OUT_WP_MAX;
+  R2020[0] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[0])*OUT_WP_MAX;
+  R2020[1] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[1])*OUT_WP_MAX;
+  R2020[2] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[2])*OUT_WP_MAX;
   
   R2020 = clamp_f3( R2020, 0., OUT_WP_1k);
   // data is full range now
