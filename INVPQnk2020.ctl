@@ -68,13 +68,10 @@ void main
   R2020 = clamp_f3( R2020, 0., OCES_WP_HDR);
   // data is full range now
   
-    // convert from  2020 RGB to XYZ
-  float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
-
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = XYZ[0];
-  gOut = XYZ[1];
-  bOut = XYZ[2];
+  rOut = R2020[0];
+  gOut = R2020[1];
+  bOut = R2020[2];
   //aOut = aIn;
 }

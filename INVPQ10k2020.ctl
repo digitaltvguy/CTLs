@@ -1,7 +1,5 @@
 // Assume full range input. Inverse PQ as 0-1
-// NOTE: DOES NOT INVERT TONE MAPPING
-// ONLY REMOVES GAMMA and multiplies from 2020 to XYZ
-//
+// Removes PQ but does not do inverse tone map
 //
 
 import "utilities";
@@ -22,8 +20,7 @@ const float F_WHITE = CV_WHITE/65535.0;
 const float RANGE = F_WHITE - F_BLACK;
 // ODT parameters related to black point compensation (BPC) and encoding
 const float OUT_BP = 0.0; //0.005;
-const float OUT_WP_MAX_PQ = 10000.0; //speculars
-
+const float OUT_WP_MAX = 10000.0; //speculars
 
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
@@ -38,14 +35,9 @@ void main
   input varying float bIn, 
   output varying float rOut,
   output varying float gOut,
-  output varying float bOut,
-  input uniform float MAX = 1000.0   
+  output varying float bOut 
 )
 {
-	
-	const float OUT_WP_MAX = MAX;
-    const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
-   
 	
 // extract out 0-1 range from input that would be MSB justified 0-1
  float PQ2020[3];
@@ -58,23 +50,17 @@ void main
 	
 
  float R2020[3];
- // scale by PQ10000_r(0.1) so that PQ2020[i] is at proper scale 
- // R2020 will come out from 0-0.1 or 1k nits
- // could later then be put into OCES and run through traditional tone curve for 709
-  R2020[0] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[0])*OUT_WP_MAX_PQ;
-  R2020[1] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[1])*OUT_WP_MAX_PQ;
-  R2020[2] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[2])*OUT_WP_MAX_PQ;
+  R2020[0] = PQ10000_f(PQ2020[0])*OUT_WP_MAX;
+  R2020[1] = PQ10000_f(PQ2020[1])*OUT_WP_MAX;
+  R2020[2] = PQ10000_f(PQ2020[2])*OUT_WP_MAX;
   
-  R2020 = clamp_f3( R2020, 0., OCES_WP_HDR);
+  R2020 = clamp_f3( R2020, 0., OUT_WP_MAX);
   // data is full range now
   
-    // convert from  2020 RGB to XYZ
-  float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
-
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = XYZ[0];
-  gOut = XYZ[1];
-  bOut = XYZ[2];
+  rOut = R2020[0];
+  gOut = R2020[1];
+  bOut = R2020[2];
   //aOut = aIn;
 }
