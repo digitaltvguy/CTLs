@@ -1,5 +1,7 @@
 // Assume full range input. Inverse PQ as 0-1
-// Removes PQ but does not do inverse tone map
+// NOTE: DOES NOT INVERT TONE MAPPING
+// ONLY REMOVES GAMMA and multiplies from 2020 to XYZ
+//
 //
 
 import "utilities";
@@ -20,7 +22,8 @@ const float F_WHITE = CV_WHITE/65535.0;
 const float RANGE = F_WHITE - F_BLACK;
 // ODT parameters related to black point compensation (BPC) and encoding
 const float OUT_BP = 0.0; //0.005;
-const float OUT_WP_MAX = 10000.0; //speculars
+const float OUT_WP_MAX_PQ = 10000.0; //speculars
+
 
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
@@ -35,9 +38,22 @@ void main
   input varying float bIn, 
   output varying float rOut,
   output varying float gOut,
-  output varying float bOut 
+  output varying float bOut,
+  input uniform float MAX = 1000.0   
 )
 {
+	
+	const float OUT_WP_MAX = MAX;
+    const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
+// internal variables used by bpc function
+const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
+                                      // (to be mapped to device black point)
+const float OCES_WP_HDR = MAX;     // luminance of OCES white point 
+                                      // (to be mapped to device white point)
+const float OUT_BP_HDR = OUT_BP;      // luminance of output device black point 
+                                      // (to which OCES black point is mapped)
+const float OUT_WP_HDR = OUT_WP_MAX_PQ; // luminance of output device white point
+                                      // (to which OCES black point is mapped)    
 	
 // extract out 0-1 range from input that would be MSB justified 0-1
  float PQ2020[3];
@@ -50,11 +66,14 @@ void main
 	
 
  float R2020[3];
-  R2020[0] = PQ10000_f(PQ2020[0])*OUT_WP_MAX;
-  R2020[1] = PQ10000_f(PQ2020[1])*OUT_WP_MAX;
-  R2020[2] = PQ10000_f(PQ2020[2])*OUT_WP_MAX;
+ // scale by PQ10000_r(0.1) so that PQ2020[i] is at proper scale 
+ // R2020 will come out from 0-0.1 or 1k nits
+ // could later then be put into OCES and run through traditional tone curve for 709
+  R2020[0] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[0])*OUT_WP_MAX_PQ;
+  R2020[1] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[1])*OUT_WP_MAX_PQ;
+  R2020[2] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[2])*OUT_WP_MAX_PQ;
   
-  R2020 = clamp_f3( R2020, 0., OUT_WP_MAX);
+  R2020 = clamp_f3( R2020, 0., OCES_WP_HDR);
   // data is full range now
   
     // convert from  2020 RGB to XYZ

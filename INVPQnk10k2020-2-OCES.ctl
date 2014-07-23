@@ -1,5 +1,5 @@
 // Assume full range input. Inverse PQ as 0-1
-// NOTE: Now includes inverse TONE MAPPING
+// NOTE: Now *** includes inverse TONE MAPPING ***
 // REMOVES GAMMA and multiplies from 2020 to XYZ
 //
 //
@@ -57,6 +57,7 @@ const float OUT_WP_MAX = MAX;
 const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
 const float SCALE_MAX = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
 
+
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
                                       // (to be mapped to device black point)
@@ -67,7 +68,7 @@ const float OUT_BP_HDR = OUT_BP;      // luminance of output device black point
 const float OUT_WP_HDR = OUT_WP_VIDEO; // luminance of output device nominal white point
                                       // (to which OCES black point is mapped)
 const float BPC_HDR = (OCES_BP_HDR * OUT_WP_HDR - OCES_WP_HDR * OUT_BP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
-const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);  
+const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR); 
 
 	
 // extract out 0-1 range from input that would be MSB justified 0-1
@@ -84,12 +85,12 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
  // scale by PQ10000_r(0.1) or "RATIO" so that PQ2020[i] is at proper scale 
  // R2020 will come out from 0-0.1 or 1k nits (0 - RATIO)
  // could later then be put into OCES and run through traditional tone curve for 709
-  R2020[0] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[0]);
-  R2020[1] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[1]);
-  R2020[2] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[2]);
+  R2020[0] = PQ10000_f(PQ2020[0]);
+  R2020[1] = PQ10000_f(PQ2020[1]);
+  R2020[2] = PQ10000_f(PQ2020[2]);
   
-  R2020 = clamp_f3( R2020, 0., RATIO);
-  // data is full range now
+  R2020 = clamp_f3( R2020, 0., 1.0);
+  // data is full range 0-1 now
   
     // convert from  2020 RGB to XYZ
   /* --- Convert from display primary encoding --- */
@@ -103,7 +104,7 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
    float linearCV[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
-    float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+    float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ); 
   
   /* scale RGB prior to inverse tone map */
   float rgbPost[3];
@@ -121,9 +122,9 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   
 // Restore any values that would have been below 0.0001 going into the tone curve
 // basically when oces is divided by SCALE_MAX any value below 0.0001 will be clipped
-   if(rgbPost[0] < 0.0001) oces[0] = rgbPre[0];
-   if(rgbPost[1] < 0.0001) oces[1] = rgbPre[1];
-   if(rgbPost[2] < 0.0001) oces[2] = rgbPre[2];  
+   if(rgbPost[0] < OCESMIN) oces[0] = rgbPre[0];
+   if(rgbPost[1] < OCESMIN) oces[1] = rgbPre[1];
+   if(rgbPost[2] < OCESMIN) oces[2] = rgbPre[2];  
   
   /* --- Cast OCES to rOut, gOut, bOut --- */  
     rOut = oces[0];

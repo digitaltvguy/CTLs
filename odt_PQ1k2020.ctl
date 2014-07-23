@@ -1,4 +1,5 @@
 // PQ 10k
+// used whole range for just 1k. NO TONE MAPPING
 // for 2020 video
 // range limites to 16 bit legal video range
 

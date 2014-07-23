@@ -34,10 +34,10 @@ void main
 
 )
 {
+
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/(DEFAULT_YMAX_ABS - DEFAULT_ODT_HI_SLOPE*(OUT_WP_MAX-DEFAULT_YMAX_ABS));
-const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VIDEO);
+const float SCALE_MAX = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
  
   /* --- Initialize a 3-element vector with input variables (0-1 CV) --- */
     float outputCV[3] = { rIn, gIn, bIn};
@@ -62,7 +62,7 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
     linearCV = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
-    float rgbPre[3] = bpc_video_inv( linearCV);
+    float rgbPre[3] = bpc_inv( linearCV, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX);
     
     
   /* scale RGB prior to inverse tone map */
@@ -81,9 +81,9 @@ const float PEAK_ADJ =  ( OUT_WP_VIDEO - OUT_BP_VIDEO) / (OUT_WP_MAX - OUT_BP_VI
   
 // Restore any values that would have been below 0.0001 going into the tone curve
 // basically when oces is divided by SCALE_MAX any value below 0.0001 will be clipped
-   if(rgbPost[0] < 0.0001) oces[0] = rgbPre[0];
-   if(rgbPost[1] < 0.0001) oces[1] = rgbPre[1];
-   if(rgbPost[2] < 0.0001) oces[2] = rgbPre[2]; 
+   if(rgbPost[0] < OCES_MIN) oces[0] = rgbPre[0];
+   if(rgbPost[1] < OCES_MIN) oces[1] = rgbPre[1];
+   if(rgbPost[2] < OCES_MIN) oces[2] = rgbPre[2]; 
   
   /* --- Cast OCES to rOut, gOut, bOut --- */  
     rOut = oces[0];
