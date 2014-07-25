@@ -65,7 +65,7 @@ void main
   R2020[1] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[1])*OUT_WP_MAX_PQ;
   R2020[2] = PQ10000_f(PQ10000_r(RATIO)*PQ2020[2])*OUT_WP_MAX_PQ;
   
-  R2020 = clamp_f3( R2020, 0., OCES_WP_HDR);
+  R2020 = clamp_f3( R2020, 0., OUT_WP_MAX);
   // data is full range now
   
 
