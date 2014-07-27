@@ -1,6 +1,7 @@
 // 
 // Inverse Rec709 Output Device Transform
 // v0.7.1
+// input -param1 MAX <value> sets top nits range and adjusts tone curve application
 //
 
 

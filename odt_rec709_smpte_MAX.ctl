@@ -1,6 +1,7 @@
 // 
 // Output Device Transform to Rec709
 // v0.7.1
+// input -param1 MAX <value> sets top nits range and adjusts tone curve application
 //
 
 //
