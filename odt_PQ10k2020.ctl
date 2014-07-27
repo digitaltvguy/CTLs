@@ -1,6 +1,7 @@
 // PQ 10k
 // for 2020 video
 // range limites to 16 bit legal video range
+// NO Tone Curve
 
 import "utilities";
 import "utilities-color";

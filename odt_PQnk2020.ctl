@@ -85,8 +85,9 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     
 
   /* --- Apply black point compensation --- */  
-   float linearCV[3] = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); // bpc_cinema_fwd( rgbPost);
-   // at this point data 0-1 is ranged OUT_BP_HDR to OUT_WP_MAX
+   float linearCV[3] = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ); // bpc_cinema_fwd( rgbPost);
+   // at this point data 0-1 is ranged OUT_BP_HDR to OUT_WP_MAX_PQ
+   // will be reduced to OUT_WP_MAX before applying PQ
     
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
@@ -104,9 +105,6 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   
 
   // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
-  tmp[0] = tmp[0]*RATIO;
-  tmp[1] = tmp[1]*RATIO;
-  tmp[2] = tmp[2]*RATIO;
   float tmp2[3] = clamp_f3(tmp,0.,RATIO); 
   // now data goes 0-RATIO (e.g. 0-0.1 if OUT_WP_MAX = 1000nits)
 
