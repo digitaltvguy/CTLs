@@ -1,10 +1,11 @@
 // removes PQ 10k from content and puts into linear
 // assumes content is 16-4076 for 0-1 range.
 // 12bits
+// uses full 0-10k range not capped at 4k!!!
 
-
-import "utilities";
+import "utilities-sd";
 import "utilities-color";
+import "tone-scale-splines";
 import "PQ";
 
 // assume that input file is tiff MSB justified in XYZ linear
@@ -24,9 +25,11 @@ void main
   input varying float rIn, 
   input varying float gIn, 
   input varying float bIn, 
+  input varying float aIn,
   output varying float rOut,
   output varying float gOut,
-  output varying float bOut 
+  output varying float bOut,
+  output varying float aOut
 )
 {
 	
@@ -60,5 +63,5 @@ tmp[2] = (XYZ[2] - CV_BLACK)/(CV_WHITE - CV_BLACK);
   rOut = outputCV[0];
   gOut = outputCV[1];
   bOut = outputCV[2];
-  //aOut = aIn;
+  aOut = aIn;
 }
