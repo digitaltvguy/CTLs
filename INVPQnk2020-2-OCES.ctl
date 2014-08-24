@@ -36,7 +36,6 @@ const float RANGE = F_WHITE - F_BLACK;
 // ODT parameters related to black point compensation (BPC) and encoding
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
-const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
 
 
