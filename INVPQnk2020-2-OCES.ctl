@@ -102,7 +102,7 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
    float linearCV[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
-    float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+    float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ); 
   
   /* scale RGB prior to inverse tone map */
   float rgbPost[3];
