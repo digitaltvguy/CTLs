@@ -37,7 +37,7 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 1000.0  
+  input uniform float MAX = 10000.0  
 )
 {
 
