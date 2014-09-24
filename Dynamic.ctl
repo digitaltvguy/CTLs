@@ -92,6 +92,7 @@ float scale=1.0;
 	//scale = (m2*L+b2)/L;
 //}
  
+  float yn = 0.0;
 
 // Quadratic (or sigmoid)
 if(L>MID)
@@ -105,32 +106,26 @@ if(L>MID)
 	float xn = (L-MID)/(PK-MID);
 	float A = (y1n-x1n*y2n)/(x1n*(x1n-1.0));
 	float BB = y2n - A;
-	float yn = A*pow(xn,2)+BB*xn;
+	yn = A*pow(xn,2)+BB*xn;
 	
-	// Sigmoid use 0.5-1 as range for xn 0-1
-	// xn scale factor affects rolloff shape
-	// and sigmoid output of 0.5-1 scaled to between 0-y2n
-    //float yn = 2.0*y2n*(1.0/(1.0 + pow(M_E, -xn*5.0)) - 0.5);
-	scale = (yn*(PK-MID)+MID)/L;
+	// Sigmoid 
+	float xs = log10(3.0*xn + 1);
+	float sig = 1.0/(1.0 + pow(M_E, -WHT*xs/150.0));
+	sig = 2.0*(sig - 0.5); // goes 0-1 between log10(MID) to log10(TVPK)
+	float logyn = (log10(TVPK)-log10(MID))*sig + log10(MID);
+	yn = (pow(10.0, logyn)-MID)/(PK-MID);
+	
+	// generic
+	scale = ((PK-MID)*yn+MID)/L;	
 }
 
+scale = 10000.0*scale/TVPK;
 
-
-scale = scale*10000.0/TVPK;
-
+// apply tone curve and correct hue
 float RGBPost[3] = mult_f_f3(scale, RGBPre);
-// Hue Restore
 RGB = restore_hue_dw3( RGBPre, RGBPost);
 
-//XYZ = mult_f3_f44( RGB, R709_PRI_2_XYZ_MAT); 
-// /* --- Handle out-of-gamut values --- */
-//// Clip to P3 gamut using hue-preserving clip
-//XYZ = huePreservingClip_to_p3d60( XYZ);
-//// Back to D65
-//XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);
-//// CIE XYZ to display RGB
-//RGBPost = mult_f3_f44( XYZ, XYZ_2_R709_PRI_MAT);    
-
+// gamut clip and restore hue
 RGB = clamp_f3( RGBPost, 0.0, 1.0);
 RGB = restore_hue_dw3( RGBPost, RGB);
 

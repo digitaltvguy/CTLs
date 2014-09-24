@@ -35,7 +35,7 @@ void main
  RGBFULL[1] = (gIn - F_BLACK)/RANGE;
  RGBFULL[2] = (bIn - F_BLACK)/RANGE;
  
-  RGBFULL = clamp_f3( RGBFULL, F_BLACK, F_WHITE);
+  RGBFULL = clamp_f3( RGBFULL, 0, 1.0);
  
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/

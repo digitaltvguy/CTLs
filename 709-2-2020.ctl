@@ -24,7 +24,6 @@ void main
   float R709[3] = {rIn, gIn, bIn};
   
 
-
 // convert from P3 to XYZ
      float XYZ[3] = mult_f3_f44( R709, R709_PRI_2_XYZ_MAT);
     // Convert from XYZ to ACES primaries

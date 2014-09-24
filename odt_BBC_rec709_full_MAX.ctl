@@ -62,12 +62,13 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 400.0  //default 400%
+  input uniform float MAX = 400.0,  
+  input uniform float GAMMA = 1.2  // system gamma (double it)
 )
 {
 
 // Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f(1.0, 1.2);
+const float WP_BBC = BBC_f(1.0, GAMMA);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
@@ -144,9 +145,9 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
-    outputCV[0] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[0],1.2);
-    outputCV[1] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[1],1.2);
-    outputCV[2] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[2],1.2);
+    outputCV[0] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[0],GAMMA);
+    outputCV[1] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[1],GAMMA);
+    outputCV[2] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[2],GAMMA);
     //if (outputCV[1] < 2*CV_BLACK) print(BBC_r( WP_BBC * linearCV[1])/WP_BBC);
     outputCV = clamp_f3( outputCV, 0., pow( 2, BITDEPTH)-1);
 
