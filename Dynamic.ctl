@@ -93,7 +93,10 @@ float scale=1.0;
 //}
  
   float yn = 0.0;
-
+ float sig = 0.0;
+ float xs = 0.0;
+ bool  flipper = false;
+ 
 // Quadratic (or sigmoid)
 if(L>MID)
 {
@@ -108,15 +111,25 @@ if(L>MID)
 	float BB = y2n - A;
 	yn = A*pow(xn,2)+BB*xn;
 	
+	// Sigmoid slope = s(x)*(1-s(x))
+	float sh = 1.0/(1.0 + pow(M_E, -0.5));
+	
 	// Sigmoid 
-	float xs = log10(3.0*xn + 1);
-	float sig = 1.0/(1.0 + pow(M_E, -WHT*xs/150.0));
+	xs = log10(10000.0*xn);
+	sig = (1.0/(1.0-sh))*( -sh + 1.0/(1.0 + pow(M_E, -(0.5+WHT*xs/500.0))));
 	sig = 2.0*(sig - 0.5); // goes 0-1 between log10(MID) to log10(TVPK)
 	float logyn = (log10(TVPK)-log10(MID))*sig + log10(MID);
 	yn = (pow(10.0, logyn)-MID)/(PK-MID);
 	
 	// generic
-	scale = ((PK-MID)*yn+MID)/L;	
+	scale = ((PK-MID)*yn+MID)/L;
+
+	if((L > L*scale && ((L-L*scale)/L < 0.02) || sig < 0.1) )
+	{
+		scale = 1.0;
+	}
+	
+	
 }
 
 scale = 10000.0*scale/TVPK;
