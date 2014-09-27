@@ -41,6 +41,12 @@ void main
 )
 {
 	
+float PKi    = PK;
+float WHTi   = WHT;
+float MIDi   = MID;
+float TVPKi  = TVPK;
+float TVWHTi = TVWHT;	
+	
 // 2020: (0.2627*(float)R + 0.6780*(float)G + 0.0593*(float)B) +0.5;
 //  709: (0.2126*(float)R + 0.7152*(float)G + 0.0722*(float)B) +0.5;	
 	
@@ -91,14 +97,60 @@ float scale=1.0;
 //{
 	//scale = (m2*L+b2)/L;
 //}
+
+// Linear LOG (correct way)
+
+  int sigmoid=0;
+  float PKLOG = log10(PK);
+  
+	if (!sigmoid) {
+	TVWHTi = log10(TVWHT);
+	MIDi = log10(MID);
+	WHTi = log10(WHT);
+	PKi = PKLOG;
+	TVPKi = log10(TVPK);
+	
+	
+}
+
+
  
-  float yn = 0.0;
- float sig = 0.0;
- float xs = 0.0;
- bool  flipper = false;
+// used for linear 
+float m1 = (TVWHTi-MIDi)/(WHTi-MIDi);
+float m2 = (TVPKi-TVWHTi)/(PKi-WHTi);
+float b1 = MIDi - m1*MIDi;
+float b2 = TVWHTi - m2*WHTi; 
+float L_SAVE = L;
+
+ 
+// Linear 
+// calculate slopes
+if (!sigmoid) {
+    L = log10(L);  
+
+	if(L>MIDi && L<WHTi)
+	{
+		 scale = (m1*L+b1)/L;
+	}
+	if(L>=WHTi)
+	{
+		scale = (m2*L+b2)/L;
+	} 
+	
+	scale = pow(10.0,scale*L)/L_SAVE;
+	L = L_SAVE;
+
+
+}
+
+// used for sigmoid
+float yn = 0.0;
+float sig = 0.0;
+float xs = 0.0;
+bool  flipper = false;
  
 // Quadratic (or sigmoid)
-if(L>MID)
+if(L>MID && sigmoid)
 {
 	//xn will go 0-1
 	float x1n = (WHT-MID)/(PK-MID);
