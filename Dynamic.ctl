@@ -125,7 +125,7 @@ float L_SAVE = L;
  
 // Linear 
 // calculate slopes
-if (!sigmoid) {
+if (!sigmoid && L > 0.00001) {
     L = log10(L);  
 
 	if(L>MIDi && L<WHTi)
