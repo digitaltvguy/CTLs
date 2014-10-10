@@ -33,7 +33,7 @@ void main
   // Put input variables (OCES) into a 3-element vector
   float P3[3] = {rIn, gIn, bIn};
   
-
+//print_f44(P3_PRI_2_XYZ_MAT);
 
 // convert from P3 to XYZ
      float XYZ[3] = mult_f3_f44( P3, P3_PRI_2_XYZ_MAT);
