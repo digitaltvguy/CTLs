@@ -62,7 +62,7 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 400.0,  
+  input uniform float MAX = 1212.0,  
   input uniform float GAMMA = 1.2  // system gamma (double it)
 )
 {
@@ -91,30 +91,10 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     float oces[3] = { rIn, gIn, bIn};
     
     
-  /* -- scale to put image through top of tone scale */
-  float ocesScale[3];
-	  ocesScale[0] = oces[0]/SCALE_MAX;
-	  ocesScale[1] = oces[1]/SCALE_MAX;
-	  ocesScale[2] = oces[2]/SCALE_MAX; 
-	       
 
-  /* --- Apply hue-preserving tone scale with saturation preservation --- */
-    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
-    
-  /* scale image back to proper range */
-   rgbPost[0] = SCALE_MAX * rgbPost[0];
-   rgbPost[1] = SCALE_MAX * rgbPost[1];
-   rgbPost[2] = SCALE_MAX * rgbPost[2]; 
-          
-    
-// Restore any values that would have been below 0.0001 going into the tone curve
-// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
-   if(ocesScale[0] < OCESMIN) rgbPost[0] = oces[0];
-   if(ocesScale[1] < OCESMIN) rgbPost[1] = oces[1];
-   if(ocesScale[2] < OCESMIN) rgbPost[2] = oces[2];    
 
   /* --- Apply black point compensation --- */ 
-   float linearCV[3] = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+   float linearCV[3] = bpc_fwd( oces, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
    // bpc_cinema_fwd( rgbPost);
    //float linearCV[3] = bpc_fwd( rgbPost, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX);
     

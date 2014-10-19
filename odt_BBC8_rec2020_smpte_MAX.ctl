@@ -74,7 +74,7 @@ void main
 {
 
 // Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f(1.0, 1.2);
+const float WP_BBC = BBC_f8(1.0, 1.2);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
