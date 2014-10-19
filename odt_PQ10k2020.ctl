@@ -5,6 +5,8 @@
 
 import "utilities";
 import "utilities-color";
+import "transforms-common";
+import "odt-transforms-common";
 import "PQ";
 
 /* ----- ODT Parameters ------ */
@@ -25,8 +27,6 @@ const unsigned int BITDEPTH = 16;
 const unsigned int CV_BLACK = 4096; //64.0*64.0;
 const unsigned int CV_WHITE = 60160;
 
-const float BPC = 0.; // these are not used for HDR tonecurve
-const float SCALE = 1.;
 
 void main 
 (
@@ -38,33 +38,39 @@ void main
   output varying float bOut 
 )
 {
+	
+	
+// internal variables used by bpc function
+const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
+                                      // (to be mapped to device black point)
+const float OCES_WP_HDR = OCES_WP_VIDEO;     // luminance of OCES white point 
+                                      // (to be mapped to device white point)
+const float OUT_BP_HDR = OUT_BP;      // luminance of output device black point 
+                                      // (to which OCES black point is mapped)
+const float OUT_WP_HDR = OUT_WP_VIDEO; // luminance of output device nominal white point
+                                      // (to which OCES black point is mapped)
+const float BPC_HDR = (OCES_BP_HDR * OUT_WP_HDR - OCES_WP_HDR * OUT_BP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
+const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR); 
+	
   // Put input variables (OCES) into a 3-element vector
   float oces[3] = {rIn, gIn, bIn};
   //print(rIn, ", ",gIn, ", ",bIn,", \n");
 
 // No HDR TONE SCALE ... let data clip on both min/max
+  /* --- Apply black point compensation --- */  
+   float linearCV[3] = bpc_fwd( oces, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); // 
 
   // Translate rendered RGB to CIE XYZ
-  float XYZ[3] = mult_f3_f44( oces, OCES_PRI_2_XYZ_MAT);
+  float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
+  
+	// Apply CAT from ACES white point to assumed observer adapted white point
+	XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);  
+  
   // Convert to 2020
   float rgbOut[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
-  // ready to add scale and then PQ for 709 R'G'B'
 
-  // Black Point Compensation
-  float offset_scaled[3];
-  offset_scaled[0] = (SCALE * rgbOut[0]) + BPC;
-  offset_scaled[1] = (SCALE * rgbOut[1]) + BPC;
-  offset_scaled[2] = (SCALE * rgbOut[2]) + BPC;
- 
-
-  // CCTF
-  float tmp[3];
-  tmp[0] = max( (offset_scaled[0] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
-  tmp[1] = max( (offset_scaled[1] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
-  tmp[2] = max( (offset_scaled[2] - OUT_BP)/(OUT_WP_MAX - OUT_BP), 0.);
- 
-  float tmp2[3] = clamp_f3(tmp,0.,1.0); 
+  float tmp2[3] = clamp_f3(rgbOut,0.,1.0); 
   //if(tmp2[0]>9.7)print("tmp2[0]= ",tmp2[0],"\n");
   //if(tmp2[1]>1.0)print("SCALE: ",SCALE, " tmp2[1]= ",tmp2[1],"\n");
   //if(tmp2[2]>9.7)print("tmp2[2]= ",tmp2[2],"\n");
