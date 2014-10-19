@@ -123,22 +123,19 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
 
+  /* --- Handle out-of-gamut values --- */
+    // Clip to P3 gamut using hue-preserving clip
+    XYZ = huePreservingClip_to_p3d60( XYZ);
+
       // Apply CAT from ACES white point to assumed observer adapted white point
       XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);
 
-    // CIE XYZ to display primaries
+    // CIE XYZ to display RGB
     linearCV = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT);
 
- 
-   // clamp to 0-WP_BBC for signal range. WP_BBC will likey be 4 not 1
-  /* --- Handle out-of-gamut values --- */
     // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
-    // the scaled ODT above will have L as 0-1 but for BBC that is actually 0-4 if using
-    // inverse BBC EOTF
-    float linearCVClamp[3] = clamp_f3( linearCV, 0., 1.0);
-  
-    // Restore hue after clip operation ("smart-clip")
-    linearCV = restore_hue_dw3( linearCV, linearCVClamp);
+    // Note: there is no hue restore step here.
+    linearCV = clamp_f3( linearCV, 0., 1.);
     
     // correct for BBC L going 0-4 and BBC V going 0-1
     linearCV = mult_f_f3(WP_BBC,linearCV);
