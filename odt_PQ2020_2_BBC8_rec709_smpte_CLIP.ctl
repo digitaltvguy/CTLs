@@ -135,6 +135,11 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     XYZ = mult_f3_f44( tmp, OCES_PRI_2_XYZ_MAT);
+    
+// Get to P3
+  /* --- Handle out-of-gamut values --- */
+    // Clip to P3 gamut using hue-preserving clip
+    XYZ = huePreservingClip_to_p3d60( XYZ);		
 
 // XYZ to BBC 709 CLIP
 
