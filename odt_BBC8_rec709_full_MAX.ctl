@@ -62,7 +62,7 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 400.0,  
+  input uniform float MAX = 1212.0,  
   input uniform float GAMMA = 1.2  // system gamma (double it)
 )
 {
@@ -136,8 +136,7 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
     // Note: there is no hue restore step here.
     linearCV = clamp_f3( linearCV, 0., 1.);
-        
-    
+            
     // correct for BBC L going 0-4 and BBC V going 0-1
     linearCV = mult_f_f3(WP_BBC,linearCV);
 

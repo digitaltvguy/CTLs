@@ -62,13 +62,13 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 527.0,  
+  input uniform float MAX = 1212.0,  
   input uniform float GAMMA = 1.2  // system gamma (double it)
 )
 {
 
 // Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f(1.0, GAMMA);
+const float WP_BBC = BBC_f8(1.0, GAMMA);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
@@ -113,16 +113,16 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 
     // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
     // Note: there is no hue restore step here.
-    linearCV  = clamp_f3( linearCV, 0., 1.);
+    linearCV = clamp_f3( linearCV, 0., 1.);
     
     // correct for BBC L going 0-4 and BBC V going 0-1
     linearCV = mult_f_f3(WP_BBC,linearCV);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
-    outputCV[0] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[0],GAMMA);
-    outputCV[1] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[1],GAMMA);
-    outputCV[2] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[2],GAMMA);
+    outputCV[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[0],GAMMA);
+    outputCV[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[1],GAMMA);
+    outputCV[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[2],GAMMA);
     //if (outputCV[1] < 2*CV_BLACK) print(BBC_r( WP_BBC * linearCV[1])/WP_BBC);
     outputCV = clamp_f3( outputCV, 0., pow( 2, BITDEPTH)-1);
 

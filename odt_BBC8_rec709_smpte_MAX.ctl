@@ -62,13 +62,13 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 527.0,  
+  input uniform float MAX = 1212.0,  
   input uniform float GAMMA = 1.2  // system gamma (double it)
 )
 {
 
 // Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f(1.0, GAMMA);
+const float WP_BBC = BBC_f8(1.0, GAMMA);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
@@ -90,13 +90,35 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
     
+    
+  /* -- scale to put image through top of tone scale */
+  float ocesScale[3];
+	  ocesScale[0] = oces[0]/SCALE_MAX;
+	  ocesScale[1] = oces[1]/SCALE_MAX;
+	  ocesScale[2] = oces[2]/SCALE_MAX; 
+	       
+
+  /* --- Apply hue-preserving tone scale with saturation preservation --- */
+    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
+    
+  /* scale image back to proper range */
+   rgbPost[0] = SCALE_MAX * rgbPost[0];
+   rgbPost[1] = SCALE_MAX * rgbPost[1];
+   rgbPost[2] = SCALE_MAX * rgbPost[2]; 
+          
+    
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
+   if(ocesScale[0] < OCESMIN) rgbPost[0] = oces[0];
+   if(ocesScale[1] < OCESMIN) rgbPost[1] = oces[1];
+   if(ocesScale[2] < OCESMIN) rgbPost[2] = oces[2];    
 
   /* --- Apply black point compensation --- */ 
-   float linearCV[3] = bpc_fwd( oces, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+   float linearCV[3] = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
    // bpc_cinema_fwd( rgbPost);
    //float linearCV[3] = bpc_fwd( rgbPost, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX);
     
-
+    
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
@@ -113,16 +135,16 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 
     // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
     // Note: there is no hue restore step here.
-    linearCV  = clamp_f3( linearCV, 0., 1.);
-    
+    linearCV = clamp_f3( linearCV, 0., 1.);
+            
     // correct for BBC L going 0-4 and BBC V going 0-1
     linearCV = mult_f_f3(WP_BBC,linearCV);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
-    outputCV[0] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[0],GAMMA);
-    outputCV[1] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[1],GAMMA);
-    outputCV[2] = (pow(2,BITDEPTH)-1) * BBC_r( linearCV[2],GAMMA);
+    outputCV[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[0],GAMMA);
+    outputCV[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[1],GAMMA);
+    outputCV[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[2],GAMMA);
     //if (outputCV[1] < 2*CV_BLACK) print(BBC_r( WP_BBC * linearCV[1])/WP_BBC);
     outputCV = clamp_f3( outputCV, 0., pow( 2, BITDEPTH)-1);
 
