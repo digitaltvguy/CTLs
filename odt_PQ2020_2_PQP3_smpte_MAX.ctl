@@ -1,32 +1,4 @@
 // 
-// Output Device Transform to Rec709
-// v0.7.1
-// input -param1 MAX <value> sets top nits range and adjusts tone curve application
-//
-
-//
-// Summary :
-//  This transform is intended for mapping OCES onto a Rec.709 broadcast 
-//  monitor that is calibrated to a D65 white point at 100 cd/m^2. The assumed 
-//  observer adapted white is D65, and the viewing environment is that of a dark
-//  theater. 
-//
-//
-// Display EOTF :
-//  The reference electro-optical transfer function specified in 
-//  Rec. ITU-R BT.1886.
-//
-// Assumed observer adapted white point:
-//         CIE 1931 chromaticities:    x            y
-//                                     0.3217       0.329
-//
-// Viewing Environment:
-//  Environment specified in SMPTE RP 431-2-2007
-//   Note: This environment is consistent with the viewing environment typical
-//     of a motion picture theater. This ODT makes no attempt to compensate for 
-//     viewing environment variables more typical of those associated with the 
-//     home.
-//
 
 
 
@@ -45,10 +17,12 @@ const Chromaticities ACES_PRI_D65 =
   { 0.31270,  0.32900}
 };
 
+
+
 /* --- ODT Parameters --- */
 const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(REC2020_PRI,1.0);
 const float XYZ_2_OCES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI_D65,1.0);
-const Chromaticities DISPLAY_PRI = REC709_PRI;
+const Chromaticities DISPLAY_PRI = P3D65_PRI;
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI_D65,1.0);
 const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 
@@ -56,7 +30,9 @@ const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
 
-
+const float DISPGAMMA = 2.4; 
+const float L_W = 1.0;
+const float L_B = 0.0;
 
 const unsigned int BITDEPTH = 16;
 // video range is
@@ -77,17 +53,15 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 1212.0,  
-  input uniform float GAMMA = 1.2  // system gamma (double it)
+  input uniform float MAX = 1200.0  
 )
 {
 
-// Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f8(1.0, GAMMA);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.15);
+const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.13);
 
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
@@ -128,52 +102,74 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Display primaries to CIE XYZ
     float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
 
-   // XYZ to OCES and Inv BPC
+   // XYZ to OCESD65 and Inv BPC
     // CIE XYZ to OCES RGB
    float tmp[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
     float oces[3] = bpc_inv( tmp, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ);    
+    
+  /* -- scale to put image through top of tone scale */
+  float ocesScale[3];
+	  ocesScale[0] = oces[0]/SCALE_MAX;
+	  ocesScale[1] = oces[1]/SCALE_MAX;
+	  ocesScale[2] = oces[2]/SCALE_MAX; 
+	       
+
+  /* --- Apply hue-preserving tone scale with saturation preservation --- */
+    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
+    
+  /* scale image back to proper range */
+   rgbPost[0] = SCALE_MAX * rgbPost[0];
+   rgbPost[1] = SCALE_MAX * rgbPost[1];
+   rgbPost[2] = SCALE_MAX * rgbPost[2]; 
+          
+    
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
+   if(ocesScale[0] < OCESMIN) rgbPost[0] = oces[0];
+   if(ocesScale[1] < OCESMIN) rgbPost[1] = oces[1];
+   if(ocesScale[2] < OCESMIN) rgbPost[2] = oces[2];      
    
-// BPC for BBC8 clip
+
   /* --- Apply black point compensation --- */ 
-   tmp = bpc_fwd( oces, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+   tmp = bpc_fwd( rgbPost, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ);
 
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     XYZ = mult_f3_f44( tmp, OCES_PRI_2_XYZ_MAT);
     
+  
+    
 // Get to P3
   /* --- Handle out-of-gamut values --- */
     // Clip to P3 gamut using hue-preserving clip
-    XYZ = huePreservingClip_to_p3d65( XYZ);		
-
-// XYZ to BBC 709 CLIP
-
-    // CIE XYZ to display RGB
-    float linearCV[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT);
-
-    // Clip values < 0 or > 1 (i.e. projecting outside the display primaries)
-    // Note: there is no hue restore step here.
-    linearCV = clamp_f3( linearCV, 0., 1.);
+    XYZ = huePreservingClip_to_p3d65( XYZ);	
     
-    // correct for BBC L going 0-4 and BBC V going 0-1
-    linearCV = mult_f_f3(WP_BBC,linearCV);
+    
+  // Convert to 2020
+  tmp = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
+  
 
-  /* --- Encode linear code values with transfer function --- */
-    float outputCV[3];
-    outputCV[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[0],GAMMA);
-    outputCV[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[1],GAMMA);
-    outputCV[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[2],GAMMA);
-    //if (outputCV[1] < 2*CV_BLACK) print(BBC_r( WP_BBC * linearCV[1])/WP_BBC);
-    outputCV = clamp_f3( outputCV, 0., pow( 2, BITDEPTH)-1);
+  // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
+  float tmp2[3] = clamp_f3(tmp,0.,RATIO); // no clamp is 1.0 , clamp if RATIO
+
+
+  float cctf[3]; 
+  cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0]);
+  cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1]);
+  cctf[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[2]); 
+  
+
+  float outputCV[3] = clamp_f3( cctf, 0., pow( 2, BITDEPTH)-1);
 
   // This step converts integer CV back into 0-1 which is what CTL expects
   outputCV = mult_f_f3( 1./(pow(2,BITDEPTH)-1), outputCV);
-  
-  /* --- Cast outputCV to rOut, gOut, bOut --- */
-    rOut = outputCV[0];
-    gOut = outputCV[1];
-    bOut = outputCV[2];
+
+  /*--- Cast outputCV to rOut, gOut, bOut ---*/
+  rOut = outputCV[0];
+  gOut = outputCV[1];
+  bOut = outputCV[2];    	
+
 
 }

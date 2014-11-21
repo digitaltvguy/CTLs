@@ -56,7 +56,9 @@ const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
 
-
+const float DISPGAMMA = 2.4; 
+const float L_W = 1.0;
+const float L_B = 0.0;
 
 const unsigned int BITDEPTH = 16;
 // video range is
@@ -77,13 +79,10 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 1212.0,  
-  input uniform float GAMMA = 1.2  // system gamma (double it)
+  input uniform float MAX = 750.0  
 )
 {
 
-// Calculate 100% L for V=1.0
-const float WP_BBC = BBC_f8(1.0, GAMMA);
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
@@ -135,9 +134,8 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   /* --- Apply inverse black point compensation --- */  
     float oces[3] = bpc_inv( tmp, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ);    
    
-// BPC for BBC8 clip
   /* --- Apply black point compensation --- */ 
-   tmp = bpc_fwd( oces, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX); 
+   tmp = bpc_fwd( oces, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX); 
 
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
@@ -157,14 +155,12 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Note: there is no hue restore step here.
     linearCV = clamp_f3( linearCV, 0., 1.);
     
-    // correct for BBC L going 0-4 and BBC V going 0-1
-    linearCV = mult_f_f3(WP_BBC,linearCV);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
-    outputCV[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[0],GAMMA);
-    outputCV[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[1],GAMMA);
-    outputCV[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * BBC_r8( linearCV[2],GAMMA);
+    outputCV[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * bt1886_r( linearCV[0], DISPGAMMA, L_W, L_B);
+    outputCV[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * bt1886_r( linearCV[1], DISPGAMMA, L_W, L_B);
+    outputCV[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * bt1886_r( linearCV[2], DISPGAMMA, L_W, L_B);
     //if (outputCV[1] < 2*CV_BLACK) print(BBC_r( WP_BBC * linearCV[1])/WP_BBC);
     outputCV = clamp_f3( outputCV, 0., pow( 2, BITDEPTH)-1);
 
