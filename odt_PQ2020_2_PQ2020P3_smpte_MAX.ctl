@@ -60,7 +60,7 @@ void main
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
 const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.13);
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.18);
 
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
