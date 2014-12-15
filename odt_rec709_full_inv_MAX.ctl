@@ -38,13 +38,10 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.15);
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.18);
  
   /* --- Initialize a 3-element vector with input variables (0-1 CV) --- */
     float outputCV[3] = { rIn, gIn, bIn};
-
-  /* --- SMPTE range to full range--- */
-    outputCV = smpteRange_to_fullRange( outputCV);
 
   /* --- Decode to linear code values with inverse transfer function --- */
     float linearCV[3];
@@ -82,9 +79,9 @@ const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YM
   
 // Restore any values that would have been below 0.0001 going into the tone curve
 // basically when oces is divided by SCALE_MAX any value below 0.0001 will be clipped
-   if(rgbPost[0] < OCES_MIN) oces[0] = rgbPre[0];
-   if(rgbPost[1] < OCES_MIN) oces[1] = rgbPre[1];
-   if(rgbPost[2] < OCES_MIN) oces[2] = rgbPre[2]; 
+   if(rgbPost[0] < OCESMIN) oces[0] = rgbPre[0];
+   if(rgbPost[1] < OCESMIN) oces[1] = rgbPre[1];
+   if(rgbPost[2] < OCESMIN) oces[2] = rgbPre[2]; 
   
   /* --- Cast OCES to rOut, gOut, bOut --- */  
     rOut = oces[0];
