@@ -67,7 +67,7 @@ void main
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.18);
 
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
