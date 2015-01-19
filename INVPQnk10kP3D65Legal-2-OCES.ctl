@@ -37,14 +37,14 @@ const unsigned int BITDEPTH = 16;
 // video range is
 // Luma and R,G,B:  CV = Floor(876*D*N+64*D+0.5)
 // Chroma:  CV = Floor(896*D*N+64*D+0.5)
-//const unsigned int CV_BLACK = 4096; //64.0*64.0;
-//const unsigned int CV_WHITE = 60160;
+const unsigned int CV_BLACK = 4096; //64.0*64.0;
+const unsigned int CV_WHITE = 60160;
 
 //const unsigned int CV_BLACK_SDI = 256; //64.0*64.0;
 //const unsigned int CV_WHITE_SDI = 65216;
 
-const unsigned int CV_BLACK = 0; //64.0*64.0;
-const unsigned int CV_WHITE = 65535;
+//const unsigned int CV_BLACK = 0; //64.0*64.0;
+//const unsigned int CV_WHITE = 65535;
 
 const float F_BLACK = CV_BLACK/65535.0;
 const float F_WHITE = CV_WHITE/65535.0;
@@ -120,7 +120,7 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
    float linearCV[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
    
     // remove any negative and >1.0 excursions
-    linearCV = clamp_f3(linearCV, 0.0, 1.0);     
+    linearCV = clamp_f3(linearCV, 0.0, 1.0);   
   
   /* --- Apply inverse black point compensation --- */  
     float rgbPre[3] = bpc_inv( linearCV, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ); 
