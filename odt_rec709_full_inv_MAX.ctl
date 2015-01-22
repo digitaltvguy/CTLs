@@ -17,7 +17,7 @@ const Chromaticities DISPLAY_PRI = REC709_PRI;
 const float XYZ_2_OCES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI,1.0);
 const float DISPLAY_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
 
-const float DISPGAMMA = 2.4; 
+//const float DISPGAMMA = 2.4; 
 const float L_W = 1.0;
 const float L_B = 0.0;
 
@@ -31,14 +31,14 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 100.0
-
+  input uniform float MAX=100.0,
+  input uniform float DISPGAMMA=2.4
 )
 {
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.18);
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.16);
  
   /* --- Initialize a 3-element vector with input variables (0-1 CV) --- */
     float outputCV[3] = { rIn, gIn, bIn};
