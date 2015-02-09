@@ -1,7 +1,7 @@
 // PQ any k for 2020 video
 // *NOTE* includes tone mapping and gamma
 // for 2020 video
-// range limites to 16 bit legal video range
+// range limites to 16 bit FULL range
 
 import "utilities";
 import "transforms-common";
@@ -24,8 +24,8 @@ const unsigned int BITDEPTH = 16;
 // video range is
 // Luma and R,G,B:  CV = Floor(876*D*N+64*D+0.5)
 // Chroma:  CV = Floor(896*D*N+64*D+0.5)
-const unsigned int CV_BLACK = 4096; //64.0*64.0;
-const unsigned int CV_WHITE = 60160;
+const unsigned int CV_BLACK = 0; //64.0*64.0;
+const unsigned int CV_WHITE = 65535;
 
 
 
@@ -37,15 +37,17 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 1000.0  
+  input uniform float MAX = 1000.0,
+  input uniform float FUDGE = 1.16  
 )
 {
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
 const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.16);
-//const float SCALE_MAX = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
+const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
+print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
 
 
 // internal variables used by bpc function
