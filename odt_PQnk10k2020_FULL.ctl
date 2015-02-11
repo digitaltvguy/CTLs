@@ -38,12 +38,12 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX = 1000.0,
-  input uniform float FUDGE = 1.16  
+  input uniform float FUDGE = 1.16
 )
 {
 
 // scale factor to put image through top of tone scale
-const float OUT_WP_MAX = MAX;
+float OUT_WP_MAX = MAX;
 const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
 const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
 const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
