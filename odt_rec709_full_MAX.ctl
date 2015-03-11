@@ -33,7 +33,7 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX=100.0,
-  input uniform float FUDGE = 1.16,
+  input uniform float FUDGE = 1.0,
   input uniform float DISPGAMMA=2.4,
   input uniform float GAMMA_MAX = 0.0
 )
@@ -44,7 +44,7 @@ void main
 float OUT_WP_MAX = MAX;
 const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
 const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
-print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
+//print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
 
 
 
@@ -97,7 +97,7 @@ print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
 
 
   // change peak if GAMMA_MAX used for actual 1.0, MAX will be MAX of the tone curve.
-   if(GAMMA_MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV); 
+   if(GAMMA_MAX >= MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV); 
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];

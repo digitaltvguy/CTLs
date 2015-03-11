@@ -32,13 +32,19 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX=100.0,
+  input uniform float FUDGE = 1.0,
   input uniform float DISPGAMMA=2.4
 )
 {
 
+// 700n 1.13, 1000n 1.17
 // scale factor to put image through top of tone scale
-const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.16);
+float OUT_WP_MAX = MAX;
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
+const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
+//print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
+
+
  
   /* --- Initialize a 3-element vector with input variables (0-1 CV) --- */
     float outputCV[3] = { rIn, gIn, bIn};

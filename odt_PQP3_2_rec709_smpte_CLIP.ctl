@@ -45,8 +45,10 @@ const Chromaticities ACES_PRI_D65 =
   { 0.31270,  0.32900}
 };
 
+
+
 /* --- ODT Parameters --- */
-const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(REC2020_PRI,1.0);
+const float RP3_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(P3D65_PRI,1.0);
 const float XYZ_2_OCES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI_D65,1.0);
 const Chromaticities DISPLAY_PRI = REC709_PRI;
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI_D65,1.0);
@@ -56,7 +58,6 @@ const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
 
-const float DISPGAMMA = 2.4; 
 const float L_W = 1.0;
 const float L_B = 0.0;
 
@@ -80,17 +81,14 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX=100.0,
-  input uniform float FUDGE = 1.0,
-  input uniform float DISPGAMMA=2.4,
-  input uniform float GAMMA_MAX = 0.0 
+  input uniform float DISPGAMMA=2.4  
 )
 {
 
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
-const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
+
 
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
@@ -103,33 +101,33 @@ const float OUT_WP_HDR = OUT_WP_VIDEO; // luminance of output device nominal whi
                                       // (to which OCES black point is mapped)
 const float BPC_HDR = (OCES_BP_HDR * OUT_WP_HDR - OCES_WP_HDR * OUT_BP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);                                      
-// PQ 2020 to XYZ
+// PQ P3 to XYZ
 
 // extract out 0-1 range from input that would be MSB justified 0-1
- float PQ2020[3];
- PQ2020[0] = (rIn - F_BLACK)/RANGE;
- PQ2020[1] = (gIn - F_BLACK)/RANGE;
- PQ2020[2] = (bIn - F_BLACK)/RANGE;
+ float PQP3[3];
+ PQP3[0] = (rIn - F_BLACK)/RANGE;
+ PQP3[1] = (gIn - F_BLACK)/RANGE;
+ PQP3[2] = (bIn - F_BLACK)/RANGE;
  
  // remove any negative and >1.0 excursions
- PQ2020 = clamp_f3(PQ2020, 0.0, 1.0);	
+ PQP3 = clamp_f3(PQP3, 0.0, 1.0);	
 	
 
- float R2020[3];
- // scale by PQ10000_r(0.1) or "RATIO" so that PQ2020[i] is at proper scale 
- // R2020 will come out from 0-0.1 or 1k nits (0 - RATIO)
+ float RP3[3];
+ // scale by PQ10000_r(0.1) or "RATIO" so that PQP3[i] is at proper scale 
+ // RP3 will come out from 0-0.1 or 1k nits (0 - RATIO)
  // could later then be put into OCES and run through traditional tone curve for 709
-  R2020[0] = PQ10000_f(PQ2020[0]);
-  R2020[1] = PQ10000_f(PQ2020[1]);
-  R2020[2] = PQ10000_f(PQ2020[2]);
+  RP3[0] = PQ10000_f(PQP3[0]);
+  RP3[1] = PQ10000_f(PQP3[1]);
+  RP3[2] = PQ10000_f(PQP3[2]);
   
-  R2020 = clamp_f3( R2020, 0., 1.0);
+  RP3 = clamp_f3( RP3, 0., 1.0);
   // data is full range 0-1 now
   
-// convert from  2020 RGB to XYZ
+// convert from  P3 RGB to XYZ
   /* --- Convert from display primary encoding --- */
     // Display primaries to CIE XYZ
-    float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
+    float XYZ[3] = mult_f3_f44( RP3, RP3_PRI_2_XYZ_MAT);
 
    // XYZ to OCES and Inv BPC
     // CIE XYZ to OCES RGB
@@ -159,8 +157,6 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Note: there is no hue restore step here.
     linearCV = clamp_f3( linearCV, 0., 1.);
     
-  // change peak if GAMMA_MAX used for actual 1.0, MAX will be MAX of the tone curve.
-   if(GAMMA_MAX >= MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV);
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];

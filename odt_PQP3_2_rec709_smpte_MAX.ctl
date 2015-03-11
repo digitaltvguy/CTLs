@@ -45,8 +45,9 @@ const Chromaticities ACES_PRI_D65 =
   { 0.31270,  0.32900}
 };
 
+
 /* --- ODT Parameters --- */
-const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(REC2020_PRI,1.0);
+const float R2020_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(P3D65_PRI,1.0);
 const float XYZ_2_OCES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI_D65,1.0);
 const Chromaticities DISPLAY_PRI = REC709_PRI;
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI_D65,1.0);
@@ -56,7 +57,6 @@ const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
 
-const float DISPGAMMA = 2.4; 
 const float L_W = 1.0;
 const float L_B = 0.0;
 
@@ -131,15 +131,38 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Display primaries to CIE XYZ
     float XYZ[3] = mult_f3_f44( R2020, R2020_PRI_2_XYZ_MAT);
 
-   // XYZ to OCES and Inv BPC
+   // XYZ to OCESD65 and Inv BPC
     // CIE XYZ to OCES RGB
    float tmp[3] = mult_f3_f44( XYZ, XYZ_2_OCES_PRI_MAT);
   
   /* --- Apply inverse black point compensation --- */  
     float oces[3] = bpc_inv( tmp, SCALE_HDR, BPC_HDR, OUT_BP_HDR, OUT_WP_MAX_PQ);    
+    
+  /* -- scale to put image through top of tone scale */
+  float ocesScale[3];
+	  ocesScale[0] = oces[0]/SCALE_MAX;
+	  ocesScale[1] = oces[1]/SCALE_MAX;
+	  ocesScale[2] = oces[2]/SCALE_MAX; 
+	       
+
+  /* --- Apply hue-preserving tone scale with saturation preservation --- */
+    float rgbPost[3] = odt_tonescale_fwd_f3( ocesScale);
+    
+  /* scale image back to proper range */
+   rgbPost[0] = SCALE_MAX * rgbPost[0];
+   rgbPost[1] = SCALE_MAX * rgbPost[1];
+   rgbPost[2] = SCALE_MAX * rgbPost[2]; 
+          
+    
+// Restore any values that would have been below 0.0001 going into the tone curve
+// basically when oces is divided by SCALE_MAX (ocesScale) any value below 0.0001 will be clipped
+   if(ocesScale[0] < OCESMIN) rgbPost[0] = oces[0];
+   if(ocesScale[1] < OCESMIN) rgbPost[1] = oces[1];
+   if(ocesScale[2] < OCESMIN) rgbPost[2] = oces[2];      
    
+
   /* --- Apply black point compensation --- */ 
-   tmp = bpc_fwd( oces, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX); 
+   tmp = bpc_fwd( rgbPost, SCALE_VIDEO, BPC_VIDEO, OUT_BP_VIDEO, OUT_WP_MAX); 
 
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
@@ -160,7 +183,7 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     linearCV = clamp_f3( linearCV, 0., 1.);
     
   // change peak if GAMMA_MAX used for actual 1.0, MAX will be MAX of the tone curve.
-   if(GAMMA_MAX >= MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV);
+   if(GAMMA_MAX >= MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV); 
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];

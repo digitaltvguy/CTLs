@@ -57,7 +57,6 @@ const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 const float OUT_BP = 0.0; //0.005;
 const float OUT_WP_MAX_PQ = 10000.0; //speculars
 
-const float DISPGAMMA = 2.4; 
 const float L_W = 1.0;
 const float L_B = 0.0;
 
@@ -80,14 +79,18 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
-  input uniform float MAX = 750.0  
+  input uniform float MAX=100.0,
+  input uniform float FUDGE = 1.0,
+  input uniform float DISPGAMMA=2.4,
+  input uniform float GAMMA_MAX = 0.0 
 )
 {
 
 
 // scale factor to put image through top of tone scale
 const float OUT_WP_MAX = MAX;
-const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,1.18);
+const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
+const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
 
 // internal variables used by bpc function
 const float OCES_BP_HDR = 0.0001;   // luminance of OCES black point. 
@@ -179,6 +182,8 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Note: there is no hue restore step here.
     linearCV = clamp_f3( linearCV, 0., 1.);
     
+  // change peak if GAMMA_MAX used for actual 1.0, MAX will be MAX of the tone curve.
+   if(GAMMA_MAX >= MAX) linearCV = mult_f_f3(MAX/GAMMA_MAX, linearCV); 
 
   /* --- Encode linear code values with transfer function --- */
     float outputCV[3];
