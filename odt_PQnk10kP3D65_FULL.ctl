@@ -78,7 +78,6 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
                                   	
   /* --- Initialize a 3-element vector with input variables (OCES) --- */
     float oces[3] = { rIn, gIn, bIn};
-    oces = clamp_f3(oces,FLT_MIN,FLT_MAX);
     
   /* -- scale to put image through top of tone scale */
   float ocesScale[3];
@@ -108,18 +107,15 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   /* --- Convert to display primary encoding --- */
     // OCES RGB to CIE XYZ
     float XYZ[3] = mult_f3_f44( linearCV, OCES_PRI_2_XYZ_MAT);
-       XYZ = clamp_f3(XYZ,FLT_MIN,OUT_WP_MAX_PQ);
 
 
   /* --- Handle out-of-gamut values --- */
     // Clip to P3 gamut using hue-preserving clip
     XYZ = huePreservingClip_to_p3d60( XYZ);
-    XYZ = clamp_f3(XYZ,FLT_MIN,OUT_WP_MAX_PQ);
 
 
     // Apply CAT from ACES white point to assumed observer adapted white point
     XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);
-    XYZ = clamp_f3(XYZ,FLT_MIN,OUT_WP_MAX_PQ);
 
  
   // Convert to P3
@@ -127,7 +123,8 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 
 
   // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
-  float tmp2[3] = clamp_f3(tmp,0.,RATIO); // no clamp is 1.0 , clamp if RATIO
+  // don't clamp at RATIO because tone curve is the ultimate limit
+  float tmp2[3] = clamp_f3(tmp,0.,OUT_WP_MAX_PQ); // no clamp is 1.0 , clamp if RATIO
 
 
   float cctf[3]; 
