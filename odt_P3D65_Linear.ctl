@@ -46,6 +46,7 @@ void main
   output varying float rOut,
   output varying float gOut,
   output varying float bOut,
+  output varying float aOut,
   input uniform float MAX = 1000.0,
   input uniform float FUDGE = 1.0
 )
@@ -125,40 +126,13 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
 
  
   // Convert to P3
-  float tmp[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
-  
-  /* Desaturate negative values going to DISPLAY Gamut */
-  inds = order3( tmp[0], tmp[1], tmp[2]);
-  if(tmp[inds[2]]<0.0){
-	  float origY = tmp[1];
-	  tmp[inds[2]]= -tmp[inds[2]]*1.3 + tmp[inds[2]];
-	  tmp[inds[1]]= -tmp[inds[2]]*1.3 + tmp[inds[1]];
-	  tmp[inds[0]]= -tmp[inds[2]]*1.3 + tmp[inds[0]];
-	  float newXYZ[3] = mult_f3_f44( tmp, DISPLAY_PRI_2_XYZ_MAT);
-	  float scaleY = fabs(origY/newXYZ[1]);
-	  tmp = mult_f_f3(scaleY,tmp);
-  }
-
-
-  // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
-  // don't clamp at RATIO because tone curve is the ultimate limit
-  float tmp2[3] = clamp_f3(tmp,0.,OUT_WP_MAX_PQ); // no clamp is 1.0 , clamp if RATIO
-
-
-  float cctf[3]; 
-  cctf[0] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[0]);
-  cctf[1] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[1]);
-  cctf[2] = CV_BLACK + (CV_WHITE - CV_BLACK) * PQ10000_r(tmp2[2]); 
+  float linear[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
 
-  float outputCV[3] = clamp_f3( cctf, 0., pow( 2, BITDEPTH)-1);
-
-  // This step converts integer CV back into 0-1 which is what CTL expects
-  outputCV = mult_f_f3( 1./(pow(2,BITDEPTH)-1), outputCV);
 
   /*--- Cast outputCV to rOut, gOut, bOut ---*/
-  rOut = outputCV[0];
-  gOut = outputCV[1];
-  bOut = outputCV[2];
-  //aOut = aIn;
+  rOut = linear[0];
+  gOut = linear[1];
+  bOut = linear[2];
+  aOut = 1.0;
 }
