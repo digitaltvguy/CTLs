@@ -88,7 +88,9 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   R2020[1] = PQ10000_f(PQ2020[1]);
   R2020[2] = PQ10000_f(PQ2020[2]);
   
-  R2020 = clamp_f3( R2020, 0., 1.0);
+  // Assume anything over MAX is not a real value so take clip of it
+  //
+  R2020 = clamp_f3( R2020, 0., RATIO);
   // data is full range 0-1 now
   
     // convert from  2020 RGB to XYZ
