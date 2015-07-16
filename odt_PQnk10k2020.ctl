@@ -13,6 +13,7 @@ import "PQ";
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
+const float DISPLAY_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
 
 
 // ODT parameters related to black point compensation (BPC) and encoding
@@ -109,7 +110,17 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   // Convert to 2020
   float tmp[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
-
+  /* Desaturate negative values going to DISPLAY Gamut */
+  int inds[3] = order3( tmp[0], tmp[1], tmp[2]);
+  if(tmp[inds[2]]<0.0){
+	  float origY = tmp[1];
+	  tmp[inds[2]]= -tmp[inds[2]]*1.3 + tmp[inds[2]];
+	  tmp[inds[1]]= -tmp[inds[2]]*1.3 + tmp[inds[1]];
+	  tmp[inds[0]]= -tmp[inds[2]]*1.3 + tmp[inds[0]];
+	  float newXYZ[3] = mult_f3_f44( tmp, DISPLAY_PRI_2_XYZ_MAT);
+	  float scaleY = fabs(origY/newXYZ[1]);
+	  tmp = mult_f_f3(scaleY,tmp);  
+	}
   // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
   float tmp2[3] = clamp_f3(tmp,0.,RATIO); // no clamp is 1.0 , clamp if RATIO
 

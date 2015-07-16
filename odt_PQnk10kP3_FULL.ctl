@@ -1,6 +1,6 @@
-// PQ any k for 2020 video
+// PQ any k for P3 video
 // *NOTE* includes tone mapping and gamma
-// for 2020 video
+// for P3 D65 video
 // range limites to 16 bit FULL range
 
 import "utilities";
@@ -9,11 +9,21 @@ import "odt-transforms-common";
 import "utilities-color";
 import "PQ";
 
+const Chromaticities P3D65_PRI =
+{
+  { 0.68000,  0.32000},
+  { 0.26500,  0.69000},
+  { 0.15000,  0.06000},
+  { 0.31270,  0.32900}
+};
+
+
+
 /* ----- ODT Parameters ------ */
 const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);
-const Chromaticities DISPLAY_PRI = REC2020_PRI;
+const Chromaticities DISPLAY_PRI = P3D65_PRI;
 const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
-const float DISPLAY_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(DISPLAY_PRI,1.0);
+
 
 // ODT parameters related to black point compensation (BPC) and encoding
 const float OUT_BP = 0.0; //0.005;
@@ -38,17 +48,16 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX = 1000.0,
-  input uniform float FUDGE = 1.0
+  input uniform float FUDGE = 1.16
 )
 {
 
-// 700n 1.13, 1000n 1.17
 // scale factor to put image through top of tone scale
 float OUT_WP_MAX = MAX;
 const float RATIO = OUT_WP_MAX/OUT_WP_MAX_PQ;
 const float SCALE_MAX = pow((OCES_WP_VIDEO/(OUT_WP_VIDEO))*OUT_WP_MAX/DEFAULT_YMAX_ABS,FUDGE);
 const float SCALE_MAX_TEST = (OCES_WP_VIDEO/OUT_WP_VIDEO)*OUT_WP_MAX/DEFAULT_YMAX_ABS;
-//print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
+print(SCALE_MAX,"  ",SCALE_MAX_TEST, "  ", SCALE_MAX/SCALE_MAX_TEST,"\n");
 
 
 // internal variables used by bpc function
@@ -107,20 +116,10 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
     // Apply CAT from ACES white point to assumed observer adapted white point
     XYZ = mult_f3_f33( XYZ, D60_2_D65_CAT);
  
-  // Convert to 2020
+  // Convert to P3
   float tmp[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
-  /* Desaturate negative values going to DISPLAY Gamut */
-  int inds[3] = order3( tmp[0], tmp[1], tmp[2]);
-  if(tmp[inds[2]]<0.0){
-	  float origY = tmp[1];
-	  tmp[inds[2]]= -tmp[inds[2]]*1.3 + tmp[inds[2]];
-	  tmp[inds[1]]= -tmp[inds[2]]*1.3 + tmp[inds[1]];
-	  tmp[inds[0]]= -tmp[inds[2]]*1.3 + tmp[inds[0]];
-	  float newXYZ[3] = mult_f3_f44( tmp, DISPLAY_PRI_2_XYZ_MAT);
-	  float scaleY = fabs(origY/newXYZ[1]);
-	  tmp = mult_f_f3(scaleY,tmp);    
-	}
+
   // clamp to 10% if 1k (RATIO) or 1k nits and scale output to go from 0-1k nits across whole code value range 
   float tmp2[3] = clamp_f3(tmp,0.,RATIO); // no clamp is 1.0 , clamp if RATIO
 
