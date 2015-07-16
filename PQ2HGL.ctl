@@ -1,20 +1,14 @@
 
 
 // 
-// Convert PQ to Gamma
+// Convert PQ to Hybrid Gamma Log
 //
 
 
 
 
 // Assume full range input. Inverse PQ as 0-1
-
-//
-
 import "utilities";
-import "transforms-common";
-import "odt-transforms-common";
-import "utilities-color";
 import "PQ";
 
 // NHK HLG constants:
