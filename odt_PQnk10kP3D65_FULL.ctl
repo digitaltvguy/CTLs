@@ -47,7 +47,8 @@ void main
   output varying float gOut,
   output varying float bOut,
   input uniform float MAX = 1000.0,
-  input uniform float FUDGE = 1.0
+  input uniform float FUDGE = 1.0,
+  input uniform int   ALARM = 0
 )
 {
 
@@ -128,15 +129,21 @@ const float SCALE_HDR = (OUT_BP_HDR - OUT_WP_HDR) / (OCES_BP_HDR - OCES_WP_HDR);
   float tmp[3] = mult_f3_f44( XYZ, XYZ_2_DISPLAY_PRI_MAT); 
   
   /* Desaturate negative values going to DISPLAY Gamut */
-  inds = order3( tmp[0], tmp[1], tmp[2]);
-  if(tmp[inds[2]]<0.0){
-	  float origY = tmp[1];
-	  tmp[inds[2]]= -tmp[inds[2]]*1.3 + tmp[inds[2]];
-	  tmp[inds[1]]= -tmp[inds[2]]*1.3 + tmp[inds[1]];
-	  tmp[inds[0]]= -tmp[inds[2]]*1.3 + tmp[inds[0]];
-	  float newXYZ[3] = mult_f3_f44( tmp, DISPLAY_PRI_2_XYZ_MAT);
-	  float scaleY = fabs(origY/newXYZ[1]);
-	  tmp = mult_f_f3(scaleY,tmp);
+  //inds = order3( tmp[0], tmp[1], tmp[2]);
+  //if(tmp[inds[2]]<0.0){
+	  //float origY = tmp[1];
+	  //tmp[inds[2]]= -tmp[inds[2]]*1.3 + tmp[inds[2]];
+	  //tmp[inds[1]]= -tmp[inds[2]]*1.3 + tmp[inds[1]];
+	  //tmp[inds[0]]= -tmp[inds[2]]*1.3 + tmp[inds[0]];
+	  //float newXYZ[3] = mult_f3_f44( tmp, DISPLAY_PRI_2_XYZ_MAT);
+	  //float scaleY = fabs(origY/newXYZ[1]);
+	  //tmp = mult_f_f3(scaleY,tmp);
+  //}
+  if (ALARM)
+  {
+	  if(tmp[0]<0.0) tmp[0] = 5000.0;
+	  if(tmp[1]<0.0) tmp[1] = 5000.0;
+	  if(tmp[2]<0.0) tmp[2] = 5000.0;
   }
 
 
