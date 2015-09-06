@@ -1,8 +1,8 @@
 
 // Assume full range input. Inverse PQ as 0-1
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 import "PQ";
 
 // assume that input file is tiff MSB justified in D65 XYZ PQ

@@ -2,8 +2,8 @@
 // Removes PQ but does not do inverse tone map
 //
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 import "PQ";
 
 // assume that input file is tiff MSB justified in 2020 PQ

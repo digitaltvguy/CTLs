@@ -1,7 +1,7 @@
 // 709 Matrix only (hopefully!)
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 
 /* ----- ODT Parameters ------ */
 const Chromaticities DISPLAY_PRI = REC709_PRI;

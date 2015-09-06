@@ -1,8 +1,8 @@
 //  ACES to XYZ
 
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 
 const float XYZ_2_ACES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI,1.0);
 const float ACES_2_XYZ_PRI_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);

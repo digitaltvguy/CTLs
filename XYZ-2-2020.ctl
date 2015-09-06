@@ -1,8 +1,8 @@
 //  XYZ to 2020 primaries
 
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 
 const float XYZ_2_2020_PRI_MAT[4][4] = XYZtoRGB(REC2020_PRI,1.0);
 

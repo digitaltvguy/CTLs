@@ -3,10 +3,10 @@
 // range limites to 16 bit legal video range
 // NO Tone Curve
 
-import "utilities";
-import "utilities-color";
-import "transforms-common";
-import "odt-transforms-common";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
+import "ACESlib.Transform_Common.a1.0.1";
+import "ACESlib.ODT_Common.a1.0.1";
 import "PQ";
 
 /* ----- ODT Parameters ------ */

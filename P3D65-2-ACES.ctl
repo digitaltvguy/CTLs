@@ -3,10 +3,10 @@
 // NOTE NOT APPLYING CAT SO BE CAREFUL TO OUTPUT D65 even if going through ACES and XYZ
 
 
-import "utilities";
-import "utilities-color";
-import "transforms-common";
-import "odt-transforms-common";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
+import "ACESlib.Transform_Common.a1.0.1";
+import "ACESlib.ODT_Common.a1.0.1";
 
 const Chromaticities P3D65_PRI =
 {

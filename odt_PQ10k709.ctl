@@ -2,8 +2,8 @@
 // for 709 video
 // range limites to 16 bit legal video range
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 import "PQ";
 
 /* ----- ODT Parameters ------ */

@@ -1,8 +1,8 @@
 //  XYZ to 709 primaries
 
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 
 const float XYZ_2_709_PRI_MAT[4][4] = XYZtoRGB(REC709_PRI,1.0);
 

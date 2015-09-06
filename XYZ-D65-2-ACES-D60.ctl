@@ -1,10 +1,10 @@
 //  XYZ to ACES primaries
 
 
-import "utilities";
-import "utilities-color";
-import "transforms-common";
-import "odt-transforms-common";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
+import "ACESlib.Transform_Common.a1.0.1";
+import "ACESlib.ODT_Common.a1.0.1";
 
 
 const float XYZ_2_ACES_PRI_MAT[4][4] = XYZtoRGB(ACES_PRI,1.0);

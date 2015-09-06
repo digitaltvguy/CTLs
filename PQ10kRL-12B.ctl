@@ -1,8 +1,8 @@
 //Puts PQ10k onto content. This assumes input is linear and ranged 0-1 but
 // output is scaled to 16-4076 so must be careful where used
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 import "PQ";
 
 // assume that input file is tiff MSB justified in XYZ linear

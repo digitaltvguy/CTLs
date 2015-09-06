@@ -2,14 +2,14 @@
 // only applies PQ
 // range limites to 16 bit legal video range
 
-import "utilities";
-import "transforms-common";
-import "odt-transforms-common";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Transform_Common.a1.0.1";
+import "ACESlib.ODT_Common.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 import "PQ";
 
 /* ----- ODT Parameters ------ */
-const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);
+//const float OCES_PRI_2_XYZ_MAT[4][4] = RGBtoXYZ(ACES_PRI,1.0);
 const Chromaticities DISPLAY_PRI = REC2020_PRI;
 const float XYZ_2_DISPLAY_PRI_MAT[4][4] = XYZtoRGB(DISPLAY_PRI,1.0);
 

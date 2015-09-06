@@ -2,8 +2,8 @@
 // slight color balancing to make Oblivion look better
 
 
-import "utilities";
-import "utilities-color";
+import "ACESlib.Utilities.a1.0.1";
+import "ACESlib.Utilities_Color.a1.0.1";
 
 
 
